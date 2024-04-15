@@ -39,7 +39,8 @@ app.get('/rsc/:shipId?', async (req, res) => {
 		shipDataStorage.run(data, () => {
 			// 🐨 create a moduleBasePath variable set to new URL('../src', import.meta.url).href
 			// 🐨 pass the moduleBase path as a second argument to renderToPipeableStream
-			const { pipe } = renderToPipeableStream(h(App))
+			const moduleBasePath = new URL('../src', import.meta.url).href
+			const { pipe } = renderToPipeableStream(h(App), moduleBasePath)
 			pipe(res)
 		})
 	} catch (error) {

@@ -2,11 +2,11 @@ import closeWithGrace from 'close-with-grace'
 import compress from 'compression'
 import express from 'express'
 // 💰 you'll need these
-// import { createElement as h } from 'react'
-// import { renderToPipeableStream } from 'react-server-dom-esm/server'
+import { createElement as h } from 'react'
+import { renderToPipeableStream } from 'react-server-dom-esm/server'
 import { getShip, searchShips } from '../db/ship-api.js'
 // 💰 you'll want this too:
-// import { App } from '../src/app.js'
+import { App } from '../src/app.js'
 
 const PORT = process.env.PORT || 3000
 
@@ -34,21 +34,22 @@ app.use((req, res, next) => {
 })
 
 // 🐨 change this from /api to /rsc
-app.get('/api/:shipId?', async (req, res) => {
+app.get('/rsc/:shipId?', async (req, res) => {
 	try {
 		const shipId = req.params.shipId || null
 		const search = req.query.search || ''
 		const ship = shipId ? await getShip({ shipId }) : null
 		const shipResults = await searchShips({ search })
 		// 🐨 rename data to props
-		const data = { shipId, search, ship, shipResults }
+		const props = { shipId, search, ship, shipResults }
 		// 🐨 remove res.json and instead call renderToPipeableStream from react-server-dom-esm/server
 		// and pass it the App component and the props
 		// 💰 remember, we don't have a JSX transformer here, so you'll use
 		// createElement directly which we aliased to `h` for brievity above.
-		return res.json(data)
+		const {pipe} = renderToPipeableStream(h(App, props))
 		// 🐨 Now pipe the stream into the response
 		// 💰 pipe(res)
+		return pipe(res)
 
 		// 📜 the API for this is about the same as it is in the react-dom package
 		// https://react.dev/reference/react-dom/server/renderToPipeableStream

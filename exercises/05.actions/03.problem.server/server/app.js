@@ -1,6 +1,6 @@
 // 💰 you'll need these
-// import bodyParser from 'body-parser'
-// import busboy from 'busboy'
+import bodyParser from 'body-parser'
+import busboy from 'busboy'
 import closeWithGrace from 'close-with-grace'
 import compress from 'compression'
 import express from 'express'
@@ -8,7 +8,7 @@ import { createElement as h } from 'react'
 import {
 	renderToPipeableStream,
 	// 💰 you'll need this
-	// decodeReplyFromBusboy,
+	decodeReplyFromBusboy,
 } from 'react-server-dom-esm/server'
 import { App } from '../src/app.js'
 import { shipDataStorage } from './async-storage.js'
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 const moduleBasePath = new URL('../src', import.meta.url).href
 
 // 🐨 add a returnValue argument here
-async function renderApp(res) {
+async function renderApp(res, returnValue) {
 	try {
 		const shipId = res.req.params.shipId || null
 		const search = res.req.query.search || ''
@@ -50,7 +50,7 @@ async function renderApp(res) {
 			const root = h(App)
 			// 🐨 change the payload to an object that has { root, returnValue }
 			// 🦉 this will break the app until you update the src/index.js file!
-			const payload = root
+			const payload = {root, returnValue}
 			const { pipe } = renderToPipeableStream(payload, moduleBasePath)
 			pipe(res)
 		})
@@ -61,25 +61,21 @@ async function renderApp(res) {
 }
 
 app.get('/rsc/:shipId?', async (req, res) => {
-	await renderApp(res)
+	await renderApp(res, null)
 })
 
-// 🐨 add a app.post to handle POST requests to /action/:shipId? that uses bodyParser
-// 💰 This isn't an express workshop, so this'll get you started:
-// app.post('/action/:shipId?', bodyParser.text(), async (req, res) => {})
-// 🐨 in the body of the POST handler, you'll want to:
-// 1. get the serverReference from the rsc-action header
-// 2. split the serverReference by '#' to get the filepath and export name
-// 3. dynamically import the action from the filepath and name
-//    💰 (await import(filepath))[name]
-// 💯 Bonus: validate the action is a valid server reference. console.log(action.$$typeof) to see how you might determine that
-// 4. parse the args: 💰
-// 		const bb = busboy({ headers: req.headers })
-// 		const reply = decodeReplyFromBusboy(bb, moduleBasePath)
-// 		req.pipe(bb)
-// 		const args = await reply
-// 5. call the action with the ...args
-// 6. call renderApp with the res and the returnValue of the action
+app.post('/action/:shipId?', bodyParser.text(), async (req, res) => {
+	const serverReference = req.get('rsc-action')
+	const [filepath, exportName] = serverReference.split('#')
+	const action = (await import(filepath))[exportName]
+	
+	const bb = busboy({ headers: req.headers })
+	const reply = decodeReplyFromBusboy(bb, moduleBasePath)
+	req.pipe(bb)
+	const args = await reply
+	const returnValue = await action(...args)
+	renderApp(res, returnValue)
+})
 
 app.get('/:shipId?', async (req, res) => {
 	res.set('Content-type', 'text/html')

@@ -5,5 +5,7 @@
 // https://github.com/bvaughn/react-error-boundary/issues/182
 
 // 🐨 add the 'use client' pragma here
+'use client'
 
 // 🐨 export everything from react-error-boundary
+export * from 'react-error-boundary'

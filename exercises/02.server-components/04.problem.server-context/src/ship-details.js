@@ -1,14 +1,13 @@
 import { createElement as h } from 'react'
 // 💰 you'll need this:
-// import { shipDataStorage } from '../server/async-storage.js'
 import { getShip } from '../db/ship-api.js'
+import { shipDataStorage } from '../server/async-storage.js'
 import { getImageUrlForShip } from './img-utils.js'
 
-export async function ShipDetails(
-	// 💣 remove the shipId prop
-	{ shipId },
-) {
+export async function ShipDetails() {
 	// 🐨 get the shipId from shipDataStorage.getStore()
+	const { shipId } = shipDataStorage.getStore()
+	console.log({ shipId })
 	const ship = await getShip({ shipId })
 	const shipImgSrc = getImageUrlForShip(ship.id, { size: 200 })
 	return h(
@@ -50,11 +49,10 @@ export async function ShipDetails(
 	)
 }
 
-export function ShipFallback(
-	// 💣 remove the shipId prop
-	{ shipId },
-) {
+export function ShipFallback() {
 	// 🐨 get the shipId from shipDataStorage.getStore()
+	const { shipId: currentShipId } = shipDataStorage.getStore()
+	console.log({ currentShipId })
 	return h(
 		'div',
 		{ className: 'ship-info' },
@@ -62,9 +60,9 @@ export function ShipFallback(
 			'div',
 			{ className: 'ship-info__img-wrapper' },
 			h('img', {
-				src: getImageUrlForShip(shipId, { size: 200 }),
+				src: getImageUrlForShip(currentShipId, { size: 200 }),
 				// TODO: handle this better
-				alt: shipId,
+				alt: currentShipId,
 			}),
 		),
 		h('section', null, h('h2', null, 'Loading...')),

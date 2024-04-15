@@ -5,7 +5,7 @@ import {
 	use,
 	useDeferredValue,
 	// 💰 you're gonna need this
-	// useEffect,
+	useEffect,
 	useRef,
 	useState,
 	useTransition,
@@ -46,6 +46,24 @@ function Root() {
 	//   - start an transition that sets the contentPromise to nextContentPromise
 	// 🐨 add that handlePopState as an event listener to the popstate event on window
 	// 🐨 don't forget to remove the event listener in the cleanup!
+
+	useEffect(() => {
+		function handlePopState() {
+			const nextLocation = getGlobalLocation()
+			setNextLocation(nextLocation)
+			const nextContentPromise = createFromFetch(fetchContent(nextLocation))
+
+			console.log(nextLocation)
+
+			startTransition(() => setContentPromise(nextContentPromise))
+		}
+
+		window.addEventListener('popstate', handlePopState)
+
+		return () => {
+			window.removeEventListener('popstate', handlePopState)
+		}
+	}, [])
 
 	function navigate(nextLocation, { replace = false } = {}) {
 		setNextLocation(nextLocation)

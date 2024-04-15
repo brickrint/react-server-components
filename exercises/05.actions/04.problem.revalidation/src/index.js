@@ -22,9 +22,9 @@ function fetchContent(location) {
 
 // 🐨 uncomment this. We're going to reassign this function when our component
 // renders, but we need it here so we can call it from outside our component.
-// function updateContentKey() {
-// 	console.error('updateContentKey called before it was set!')
-// }
+function updateContentKey() {
+	console.error('updateContentKey called before it was set!')
+}
 
 function createFromFetch(fetchPromise) {
 	return RSC.createFromFetch(fetchPromise, {
@@ -41,15 +41,18 @@ async function callServer(id, args) {
 		body: await RSC.encodeReply(args),
 	})
 	// 🐨 get the contentKey from window.history.state?.key ?? generateKey()
+	const contentKey = window.history.state?.key ?? generateKey()
 	// 🐨 use the onStreamFinished utility from below:
 	// 💰
-	// onStreamFinished(fetchPromise, () => {
-	// 	🐨 when the stream is finished, call updateContentKey with the contentKey
-	// })
+	onStreamFinished(fetchPromise, () => {
+		updateContentKey(contentKey)
+		// 🐨 when the stream is finished, call updateContentKey with the contentKey
+	})
 	// 🦉 we need to wait until the stream is finished otherwise we'll update to a
 	// pending state!
 	const actionResponsePromise = createFromFetch(fetchPromise)
 	// 🐨 use the contentKey to add the actionResponsePromise in the contentCache
+	contentCache.set(contentKey, actionResponsePromise)
 	const { returnValue } = await actionResponsePromise
 	return returnValue
 }
@@ -65,16 +68,16 @@ if (!initialContentKey) {
 contentCache.set(initialContentKey, initialContentPromise)
 
 // 💰 you're going to want this handy utility
-// function onStreamFinished(fetchPromise, onFinished) {
-// 	// create a promise chain that resolves when the stream is completely consumed
-// 	return (
-// 		fetchPromise
-// 			// clone the response so createFromFetch can use it (otherwise we lock the reader)
-// 			// and wait for the text to be consumed so we know the stream is finished
-// 			.then(response => response.clone().text())
-// 			.then(onFinished)
-// 	)
-// }
+function onStreamFinished(fetchPromise, onFinished) {
+	// create a promise chain that resolves when the stream is completely consumed
+	return (
+		fetchPromise
+			// clone the response so createFromFetch can use it (otherwise we lock the reader)
+			// and wait for the text to be consumed so we know the stream is finished
+			.then(response => response.clone().text())
+			.then(onFinished)
+	)
+}
 
 function Root() {
 	const latestNav = useRef(null)
@@ -85,6 +88,11 @@ function Root() {
 
 	// 🐨 add a useEffect here that reassigns updateConentKey to a function that
 	// accepts a newContentKey and calls setContentKey(newContentKey) in a startTransition
+	useEffect(() => {
+		updateContentKey = (newContentKey) => {
+			startTransition(() => setContentKey(newContentKey))
+		}
+	}, [])
 
 	const location = useDeferredValue(nextLocation)
 	const contentPromise = contentCache.get(contentKey)
@@ -102,7 +110,7 @@ function Root() {
 			}
 
 			// 🐨 swap this with updateContentKey
-			startTransition(() => setContentKey(historyKey))
+			startTransition(() => updateContentKey(historyKey))
 		}
 		window.addEventListener('popstate', handlePopState)
 		return () => window.removeEventListener('popstate', handlePopState)
@@ -128,7 +136,7 @@ function Root() {
 
 		contentCache.set(newContentKey, nextContentPromise)
 		// 🐨 swap this with updateContentKey
-		startTransition(() => setContentKey(newContentKey))
+		startTransition(() => updateContentKey(newContentKey))
 	}
 
 	return h(

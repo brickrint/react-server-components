@@ -3,18 +3,20 @@
 import { Fragment, Suspense, createElement as h } from 'react'
 import { ErrorBoundary } from './error-boundary.js'
 // 💰 bring in parseLocationState here
-import { mergeLocationState, useRouter } from './router.js'
+import { mergeLocationState, useRouter, parseLocationState } from './router.js'
 // 💯 if you want to do the extra credit, you'll want this:
-// import { useSpinDelay } from './spin-delay.js'
+import { useSpinDelay } from './spin-delay.js'
 
 export function ShipSearch({ search, results, fallback }) {
 	// 🐨 get the nextLocation here
-	const { navigate, location } = useRouter()
+	const { navigate, location, nextLocation, isPending } = useRouter()
 	// 🐨 we're pending if the nextLocation's search is different from the current
 	// location's search
 	// 💰 you'll want to use parseLocationState for this
+	const { search: currentSearch } = parseLocationState(location)
+	const { search: nextSearch } = parseLocationState(nextLocation)
 	// 💯 for extra credit, avoid a flash of loading state with useSpinDelay
-	const isShipSearchPending = false
+	const isShipSearchPending = useSpinDelay(currentSearch !== nextSearch || isPending)
 
 	return h(
 		Fragment,

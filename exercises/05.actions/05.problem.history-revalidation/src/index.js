@@ -95,17 +95,23 @@ function Root() {
 
 			// 🐨 handle race conditions for this revalidation similar to what we do
 			// in navigate below with the latestNav ref.
+			const thisNav = Symbol(`Popstate for ${nextLocation}`)
+			latestNav.current = thisNav
 
 			// 🐨 declare "let nextContentPromise" here
 			// 🐨 move the fetchPromise up from the if statement below because now we're going to revalidate all the time
+			let nextContentPromise
+			const fetchPromise = fetchContent(nextLocation)
+			onStreamFinished(fetchPromise, () => {
+				contentCache.set(historyKey, nextContentPromise)
+			})
+			nextContentPromise = createFromFetch(fetchPromise)
 			// 🐨 when the fetchPromise stream is finished (💰 onStreamFinished):
 			//   set the historyKey in the contentCache to nextContentPromise
 			// 🐨 assign nextContentPromise to createFromFetch(fetchPromise)
 
 			if (!contentCache.has(historyKey)) {
 				// 🐨 move these two things up because we're going to do it all the time:
-				const fetchPromise = fetchContent(nextLocation)
-				const nextContentPromise = createFromFetch(fetchPromise)
 
 				// if we don't have this key in the cache already, set it now
 				contentCache.set(historyKey, nextContentPromise)

@@ -4,10 +4,10 @@ import {
 	startTransition,
 	use,
 	// 💰 you'll need this
-	// useDeferredValue,
+	useDeferredValue,
 	useState,
 	// 💰 you'll need this
-	// useTransition,
+	useTransition,
 } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as RSC from 'react-server-dom-esm/client'
@@ -30,11 +30,13 @@ const initialContentPromise = createFromFetch(fetchContent(initialLocation))
 
 function Root() {
 	// 🐨 change this to nextLocation
-	const [location, setLocation] = useState(initialLocation)
+	const [nextLocation, setLocation] = useState(initialLocation)
 	const [contentPromise, setContentPromise] = useState(initialContentPromise)
 	// 🐨 call useTransition here to get isPending and startTransition
+	const [isPending, startTransition] = useTransition()
 
 	// 🐨 create a location variable set to useDeferredValue of the nextLocation
+	const location = useDeferredValue(nextLocation)
 
 	function navigate(nextLocation, { replace = false } = {}) {
 		setLocation(nextLocation)
@@ -60,6 +62,8 @@ function Root() {
 				navigate,
 				location,
 				// 🐨 add the nextLocation and isPending to this context value
+				isPending,
+				nextLocation
 			},
 		},
 		use(contentPromise),

@@ -36,6 +36,21 @@ function createFromFetch(fetchPromise) {
 // 🐨 then create a new actionResponsePromise using createFromFetch
 // 🐨 await the actionResponsePromise and destructure a property called "returnValue"
 // 🐨 return the returnValue
+async function callServer(id, args) {
+	const response = fetch(
+		`/action/${getGlobalLocation()}`,
+		{
+			method: 'POST',
+			headers: { 'rsc-action': id },
+			body: await RSC.encodeReply(args),
+		}
+	)
+
+	const actionResponsePromise = createFromFetch(response)
+	const { returnValue } = await actionResponsePromise
+
+	return returnValue
+}
 
 const initialLocation = getGlobalLocation()
 const initialContentPromise = createFromFetch(fetchContent(initialLocation))

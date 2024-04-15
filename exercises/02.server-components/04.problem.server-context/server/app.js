@@ -4,8 +4,7 @@ import express from 'express'
 import { createElement as h } from 'react'
 import { renderToPipeableStream } from 'react-server-dom-esm/server'
 import { App } from '../src/app.js'
-// 💰 you'll want this:
-// import { shipDataStorage } from './async-storage.js'
+import { shipDataStorage } from './async-storage.js'
 
 const PORT = process.env.PORT || 3000
 
@@ -36,11 +35,12 @@ app.get('/rsc/:shipId?', async (req, res) => {
 	try {
 		const shipId = req.params.shipId || null
 		const search = req.query.search || ''
-		// 🐨 rename this to data (again 😅)
-		const props = { shipId, search }
-		// 🐨 wrap this in shipDataStorage.run providing the data and remove the props from App
-		const { pipe } = renderToPipeableStream(h(App, props))
-		pipe(res)
+		const data = { shipId, search }
+
+		shipDataStorage.run(data, async () => {
+			const { pipe } = renderToPipeableStream(h(App))
+			pipe(res)
+		});
 	} catch (error) {
 		console.error(error)
 		res.status(500).json({ error: error.message })

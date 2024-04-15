@@ -20,11 +20,9 @@ export async function load(url, context, defaultLoad) {
 	const result = await reactLoad(url, context, (u, c) => {
 		return textLoad(u, c, defaultLoad)
 	})
-	// 🐨 uncomment this so you can observe the changes the loader makes to our
-	// error-boundary.js module.
-	// 💰
-	// if (url.includes('error-boundary')) {
-	// 	console.log(result.source)
-	// }
+
+	if (url.includes('error-boundary')) {
+		console.log(result.source)
+	}
 	return result
 }

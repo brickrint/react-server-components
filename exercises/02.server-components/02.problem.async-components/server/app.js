@@ -3,7 +3,6 @@ import compress from 'compression'
 import express from 'express'
 import { createElement as h } from 'react'
 import { renderToPipeableStream } from 'react-server-dom-esm/server'
-import { getShip, searchShips } from '../db/ship-api.js'
 import { App } from '../src/app.js'
 
 const PORT = process.env.PORT || 3000
@@ -35,11 +34,7 @@ app.get('/rsc/:shipId?', async (req, res) => {
 	try {
 		const shipId = req.params.shipId || null
 		const search = req.query.search || ''
-		// 💣 delete the ship and shipResults
-		const ship = shipId ? await getShip({ shipId }) : null
-		const shipResults = await searchShips({ search })
-		// 💣 remove them from the props object too
-		const props = { shipId, search, ship, shipResults }
+		const props = { shipId, search }
 		const { pipe } = renderToPipeableStream(h(App, props))
 		pipe(res)
 	} catch (error) {

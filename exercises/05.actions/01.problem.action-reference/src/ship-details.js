@@ -2,6 +2,7 @@ import { createElement as h } from 'react'
 import { getShip } from '../db/ship-api.js'
 import { shipDataStorage } from '../server/async-storage.js'
 // 🐨 bring in updateShipName from the './actions.js' file
+import { updateShipName } from './actions.js'
 import { EditableText } from './edit-text.js'
 import { getImageUrlForShip } from './img-utils.js'
 import { ShipImg } from './img.js'
@@ -28,6 +29,7 @@ export async function ShipDetails() {
 					key: shipId,
 					shipId,
 					// 🐨 add an action prop set to updateShipName
+					action: updateShipName,
 					initialValue: ship.name,
 				}),
 			),

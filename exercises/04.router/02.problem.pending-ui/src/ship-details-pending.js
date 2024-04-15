@@ -2,9 +2,9 @@
 
 import { createElement as h } from 'react'
 // 💰 you'll want this
-// import { parseLocationState, useRouter } from './router.js'
+import { parseLocationState, useRouter } from './router.js'
 // 💯 if you want to do the extra credit, grab this
-// import { useSpinDelay } from './spin-delay.js'
+import { useSpinDelay } from './spin-delay.js'
 
 export function ShipDetailsPendingTransition({ children }) {
 	// 🐨 get the location and nextLocation from useRouter
@@ -12,7 +12,10 @@ export function ShipDetailsPendingTransition({ children }) {
 	// the shipId of the current location
 	// 💰 use parseLocationState to get the shipId.
 	// 💯 for extra credit, avoid a flash of loading state with useSpinDelay
-	const isShipDetailsPending = false
+	const { location, nextLocation, isPending } = useRouter()
+	const { shipId: currentShipId } = parseLocationState(location)
+	const { shipId: nextShipId } = parseLocationState(nextLocation)
+	const isShipDetailsPending = useSpinDelay(currentShipId !== nextShipId || isPending)
 
 	return h('div', {
 		className: 'details',

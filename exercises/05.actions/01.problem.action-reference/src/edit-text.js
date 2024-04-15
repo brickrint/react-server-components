@@ -1,7 +1,7 @@
 'use client'
 
 // 🐨 bring in useActionState from 'react' here
-import { createElement as h, useRef, useState } from 'react'
+import { createElement as h, useRef, useState, useActionState } from 'react'
 import { flushSync } from 'react-dom'
 
 const inheritStyles = {
@@ -13,9 +13,10 @@ const inheritStyles = {
 }
 
 // 🐨 accept an action prop
-export function EditableText({ id, shipId, initialValue = '' }) {
+export function EditableText({ id, shipId, initialValue = '', action }) {
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState(initialValue)
+	const {formState, formAction, isPending} = useActionState(action)
 	// 🐨 get formState, formAction, and isPending from useActionState from react
 	// with the action from props
 	const inputRef = useRef(null)
@@ -25,6 +26,7 @@ export function EditableText({ id, shipId, initialValue = '' }) {
 				'form',
 				{
 					// 🐨 add an action prop and set it to formAction
+					action: formAction,
 					onSubmit: () => {
 						setValue(inputRef.current?.value ?? '')
 					},
@@ -68,11 +70,21 @@ export function EditableText({ id, shipId, initialValue = '' }) {
 						'button',
 						{ type: 'submit' },
 						// 🐨 if we're pending, then make the text contents '...'
-						'Submit',
+						isPending ? '...' : 'Submit',
 					),
 				),
 				// 🐨 if we have formState, then display the formState.message here in a div
 				// 💯 make the color red if it's an error and green if it's not
+				formState && h(
+					'div', 
+					{
+						style: {
+							color: formState.status === 'error' ? 'red' : 'green',
+							textAlign: 'center',
+						}
+					},
+					formState.message
+				)
 			)
 		: h(
 				'button',
